@@ -1,0 +1,118 @@
+{
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "asset": {
+    "version": "2.0",
+    "generator": "https://github.com/mikedh/trimesh"
+  },
+  "accessors": [
+    {
+      "componentType": 5125,
+      "type": "SCALAR",
+      "bufferView": 0,
+      "count": 53760,
+      "max": [
+        8987
+      ],
+      "min": [
+        0
+      ]
+    },
+    {
+      "componentType": 5126,
+      "type": "VEC3",
+      "byteOffset": 0,
+      "bufferView": 1,
+      "count": 8988,
+      "max": [
+        1.9800000190734863,
+        1.2899999618530273,
+        1.100000023841858
+      ],
+      "min": [
+        -1.5499999523162842,
+        -1.0199999809265137,
+        -1.100000023841858
+      ]
+    },
+    {
+      "componentType": 5121,
+      "normalized": true,
+      "type": "VEC4",
+      "byteOffset": 0,
+      "bufferView": 2,
+      "count": 8988,
+      "max": [
+        182,
+        138,
+        118,
+        255
+      ],
+      "min": [
+        8,
+        8,
+        8,
+        255
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "geometry_0",
+      "extras": {
+        "shape": "radius"
+      },
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "COLOR_0": 2
+          },
+          "indices": 0,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "world",
+      "children": [
+        1
+      ]
+    },
+    {
+      "name": "geometry_0",
+      "mesh": 0
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 358848,
+      "uri": "hyrax.bin"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 215040
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 215040,
+      "byteLength": 107856
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 322896,
+      "byteLength": 35952
+    }
+  ]
+}
