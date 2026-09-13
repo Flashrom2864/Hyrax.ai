@@ -1,0 +1,45 @@
+{
+  "updated": "2026-09-13T00:00:00-07:00",
+  "metrics": [
+    {
+      "label": "Active Projects",
+      "value": "3",
+      "note": "Currently tracked"
+    },
+    {
+      "label": "Build Status",
+      "value": "PASS",
+      "note": "Latest demo build"
+    },
+    {
+      "label": "Artifacts",
+      "value": "6",
+      "note": "Files available"
+    },
+    {
+      "label": "Automation",
+      "value": "ON",
+      "note": "Proof-of-concept mode"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Hyrax 3D Viewer",
+      "detail": "Interactive GLB model running in-browser",
+      "progress": 100,
+      "status": "ACTIVE"
+    },
+    {
+      "name": "Project Dashboard",
+      "detail": "Static status and project tracking interface",
+      "progress": 85,
+      "status": "ACTIVE"
+    },
+    {
+      "name": "Verification Layer",
+      "detail": "Artifacts, commits, and outputs linked to project claims",
+      "progress": 60,
+      "status": "AUDIT"
+    }
+  ]
+}
