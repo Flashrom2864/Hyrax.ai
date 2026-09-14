@@ -23,19 +23,19 @@ nav{position:absolute;inset:0 0 auto;z-index:20}.nav{height:78px;display:flex;al
 <nav><div class="shell nav"><div class="brand">Hyrax<span>.ai</span></div><div class="navlinks"><a href="#work">Work</a><a href="#about">About</a></div></div></nav>
 <main>
 <section class="hero">
-<div class="shell" style="width:100%"><div class="copy">
-<div class="eyebrow">Interactive AI workspace</div>
-<h1>Hyrax<span>.</span></h1>
-<p class="lead">A lightweight place for AI-assisted projects, experiments, and verifiable work.</p>
-</div></div>
-<div class="stage"><canvas id="gl" aria-label="Interactive voxel hyrax. Drag to orbit, pinch or scroll to zoom, tap to squish."></canvas></div>
-<div class="hint">Drag to orbit · pinch to zoom · tap to squish</div>
-<div id="err" class="err">3D failed to load.</div>
+  <div class="shell" style="width:100%"><div class="copy">
+    <div class="eyebrow">Interactive AI workspace</div>
+    <h1>Hyrax<span>.</span></h1>
+    <p class="lead">A lightweight place for AI-assisted projects, experiments, and verifiable work.</p>
+  </div></div>
+  <div class="stage"><canvas id="gl" aria-label="Interactive voxel hyrax. Drag to orbit, pinch or scroll to zoom, tap to squish."></canvas></div>
+  <div class="hint">Drag to orbit · pinch to zoom · tap to squish</div>
+  <div id="err" class="err">3D failed to load.</div>
 </section>
 <section id="work" class="strip"><div class="shell stripin">
-<div class="mini"><div class="k">Projects</div><b>Built in public</b><p>Experiments and technical work stay inspectable instead of disappearing into a chat.</p></div>
-<div class="mini"><div class="k">Proof</div><b>Artifacts over claims</b><p>Commits, tests, builds, and outputs make the work easy to verify.</p></div>
-<div class="mini"><div class="k">Status</div><b>One clear view</b><p>See what is active, blocked, testing, or finished without dashboard clutter.</p></div>
+  <div class="mini"><div class="k">Projects</div><b>Built in public</b><p>Experiments and technical work stay inspectable instead of disappearing into a chat.</p></div>
+  <div class="mini"><div class="k">Proof</div><b>Artifacts over claims</b><p>Commits, tests, builds, and outputs make the work easy to verify.</p></div>
+  <div class="mini"><div class="k">Status</div><b>One clear view</b><p>See what is active, blocked, testing, or finished without dashboard clutter.</p></div>
 </div></section>
 <section id="about" class="shell about"><h2>Less dashboard.<br>More object.</h2><p>The hyrax is the interface anchor: voxel-built, tactile, and directly interactive. The page stays quiet so the model feels embedded in the site rather than trapped inside a separate viewer.</p></section>
 </main>
@@ -47,6 +47,7 @@ const canvas=document.getElementById('gl');
 const err=document.getElementById('err');
 const gl=canvas.getContext('webgl2',{alpha:true,antialias:true,premultipliedAlpha:false,powerPreference:'high-performance'});
 if(!gl){err.style.display='block';err.textContent='This browser does not support WebGL2.';return;}
+
 const vs=`#version 300 es
 precision highp float;
 layout(location=0) in vec3 aPos;
@@ -64,16 +65,17 @@ out vec3 vNormal;
 out vec3 vColor;
 out float vGloss;
 void main(){
-vec3 local=aPos*iScale;
-local*=uGlobalScale;
-vec4 w=uModel*vec4(local+iOffset,1.0);
-mat3 nmat=mat3(uModel);
-vNormal=normalize(nmat*aNormal);
-vWorld=w.xyz;
-vColor=iColor;
-vGloss=iGloss;
-gl_Position=uProj*uView*w;
+  vec3 local=aPos*iScale;
+  local*=uGlobalScale;
+  vec4 w=uModel*vec4(local+iOffset,1.0);
+  mat3 nmat=mat3(uModel);
+  vNormal=normalize(nmat*aNormal);
+  vWorld=w.xyz;
+  vColor=iColor;
+  vGloss=iGloss;
+  gl_Position=uProj*uView*w;
 }`;
+
 const fs=`#version 300 es
 precision highp float;
 in vec3 vWorld;
@@ -83,147 +85,740 @@ in float vGloss;
 uniform vec3 uCamera;
 out vec4 outColor;
 vec3 aces(vec3 x){
-const float a=2.51;const float b=.03;const float c=2.43;const float d=.59;const float e=.14;
-return clamp((x*(a*x+b))/(x*(c*x+d)+e),0.0,1.0);
+  const float a=2.51; const float b=.03; const float c=2.43; const float d=.59; const float e=.14;
+  return clamp((x*(a*x+b))/(x*(c*x+d)+e),0.0,1.0);
 }
 void main(){
-vec3 N=normalize(vNormal);
-vec3 V=normalize(uCamera-vWorld);
-vec3 Lk=normalize(vec3(-0.52,0.76,0.55));
-float kd=max(dot(N,Lk),0.0);
-vec3 Lf=normalize(vec3(0.72,0.26,0.64));
-float fd=max(dot(N,Lf),0.0);
-vec3 Lr=normalize(vec3(0.18,0.48,-0.86));
-float rd=max(dot(N,Lr),0.0);
-float hemi=N.y*.5+.5;
-vec3 ambient=mix(vec3(.075,.045,.033),vec3(.17,.205,.245),hemi)*0.72;
-vec3 keyColor=vec3(1.00,.79,.58)*kd*1.42;
-vec3 fillColor=vec3(.43,.66,1.00)*fd*.42;
-vec3 rearColor=vec3(.34,.57,.95)*rd*.34;
-float gloss=mix(22.0,92.0,clamp(vGloss,0.0,1.0));
-float specStrength=mix(.055,.58,clamp(vGloss,0.0,1.0));
-vec3 Hk=normalize(Lk+V);
-vec3 Hf=normalize(Lf+V);
-float spec=pow(max(dot(N,Hk),0.0),gloss)*specStrength+pow(max(dot(N,Hf),0.0),gloss*.8)*specStrength*.30;
-float fres=pow(1.0-max(dot(N,V),0.0),3.0);
-vec3 rim=vec3(.25,.47,.78)*fres*(.10+.19*rd);
-vec3 lit=vColor*(ambient+keyColor+fillColor+rearColor);
-lit+=vec3(1.0,.91,.80)*spec+rim;
-lit*=mix(.84,1.0,smoothstep(-.8,.2,N.y));
-lit=aces(lit*1.10);
-lit=pow(lit,vec3(1.0/2.2));
-outColor=vec4(lit,1.0);
+  vec3 N=normalize(vNormal);
+  vec3 V=normalize(uCamera-vWorld);
+  vec3 Lk=normalize(vec3(-0.52,0.76,0.55));
+  float kd=max(dot(N,Lk),0.0);
+  vec3 Lf=normalize(vec3(0.72,0.26,0.64));
+  float fd=max(dot(N,Lf),0.0);
+  vec3 Lr=normalize(vec3(0.18,0.48,-0.86));
+  float rd=max(dot(N,Lr),0.0);
+  float hemi=N.y*.5+.5;
+  vec3 ambient=mix(vec3(.075,.045,.033),vec3(.17,.205,.245),hemi)*0.72;
+  vec3 keyColor=vec3(1.00,.79,.58)*kd*1.42;
+  vec3 fillColor=vec3(.43,.66,1.00)*fd*.42;
+  vec3 rearColor=vec3(.34,.57,.95)*rd*.34;
+  float gloss=mix(22.0,92.0,clamp(vGloss,0.0,1.0));
+  float specStrength=mix(.055,.58,clamp(vGloss,0.0,1.0));
+  vec3 Hk=normalize(Lk+V);
+  vec3 Hf=normalize(Lf+V);
+  float spec=pow(max(dot(N,Hk),0.0),gloss)*specStrength +
+             pow(max(dot(N,Hf),0.0),gloss*.8)*specStrength*.30;
+  float fres=pow(1.0-max(dot(N,V),0.0),3.0);
+  vec3 rim=vec3(.25,.47,.78)*fres*(.10+.19*rd);
+  vec3 lit=vColor*(ambient+keyColor+fillColor+rearColor);
+  lit+=vec3(1.0,.91,.80)*spec+rim;
+  lit*=mix(.84,1.0,smoothstep(-.8,.2,N.y));
+  lit=aces(lit*1.10);
+  lit=pow(lit,vec3(1.0/2.2));
+  outColor=vec4(lit,1.0);
 }`;
-function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s)||'shader compile failed');return s}
-function program(v,f){const p=gl.createProgram();gl.attachShader(p,shader(gl.VERTEX_SHADER,v));gl.attachShader(p,shader(gl.FRAGMENT_SHADER,f));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p)||'program link failed');return p}
+
+function shader(type,src){
+  const s=gl.createShader(type);
+  gl.shaderSource(s,src);
+  gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))
+    throw new Error(gl.getShaderInfoLog(s)||'shader compile failed');
+  return s;
+}
+
+function program(v,f){
+  const p=gl.createProgram();
+  gl.attachShader(p,shader(gl.VERTEX_SHADER,v));
+  gl.attachShader(p,shader(gl.FRAGMENT_SHADER,f));
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS))
+    throw new Error(gl.getProgramInfoLog(p)||'program link failed');
+  return p;
+}
+
 let prog;
-try{prog=program(vs,fs)}catch(e){err.style.display='block';err.textContent='3D shader error: '+e.message;return}
+try{
+  prog=program(vs,fs);
+}catch(e){
+  err.style.display='block';
+  err.textContent='3D shader error: '+e.message;
+  return;
+}
+
 gl.useProgram(prog);
-const P=[],N=[],I=[];
-function face(nx,ny,nz,a,b,c,d){const base=P.length/3;[a,b,c,d].forEach(v=>P.push(...v));for(let k=0;k<4;k++)N.push(nx,ny,nz);I.push(base,base+1,base+2,base,base+2,base+3)}
+
+const P=[],N=[],I[];
+
+function face(nx,ny,nz,a,b,c,d){
+  const base=P.length/3;
+  [a,b,c,d].forEach(v=>P.push(...v));
+  for(let k=0;k<4;k++)N.push(nx,ny,nz);
+  I.push(base,base+1,base+2,base,base+2,base+3);
+}
+
 const m=.5;
-face(1,0,0,[m,-m,-m],[m,m,-m],[m,m,m],[m,-m,m]);
+
+face( 1,0,0,[m,-m,-m],[m,m,-m],[m,m,m],[m,-m,m]);
 face(-1,0,0,[-m,-m,m],[-m,m,m],[-m,m,-m],[-m,-m,-m]);
-face(0,1,0,[-m,m,-m],[-m,m,m],[m,m,m],[m,m,-m]);
+face(0, 1,0,[-m,m,-m],[-m,m,m],[m,m,m],[m,m,-m]);
 face(0,-1,0,[-m,-m,m],[-m,-m,-m],[m,-m,-m],[m,-m,m]);
-face(0,0,1,[-m,-m,m],[m,-m,m],[m,m,m],[-m,m,m]);
+face(0,0, 1,[-m,-m,m],[m,-m,m],[m,m,m],[-m,m,m]);
 face(0,0,-1,[m,-m,-m],[-m,-m,-m],[-m,m,-m],[m,m,-m]);
-function buf(loc,data,size,div=0,type=gl.FLOAT){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,size,type,false,0,0);if(div)gl.vertexAttribDivisor(loc,div);return b}
-const vao=gl.createVertexArray();gl.bindVertexArray(vao);
-buf(0,new Float32Array(P),3);buf(1,new Float32Array(N),3);
-const ebo=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ebo);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(I),gl.STATIC_DRAW);
+
+function buf(loc,data,size,div=0,type=gl.FLOAT){
+  const b=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,b);
+  gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc,size,type,false,0,0);
+  if(div)gl.vertexAttribDivisor(loc,div);
+  return b;
+}
+
+const vao=gl.createVertexArray();
+gl.bindVertexArray(vao);
+
+buf(0,new Float32Array(P),3);
+buf(1,new Float32Array(N),3);
+
+const ebo=gl.createBuffer();
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ebo);
+gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(I),gl.STATIC_DRAW);
+
 let seed=1337;
-function rnd(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
+
+function rnd(){
+  seed=(seed*1664525+1013904223)>>>0;
+  return seed/4294967296;
+}
+
 const inst=[];
-function add(x,y,z,sx,sy,sz,r,g,b,gloss=0){inst.push(x,y,z,sx,sy,sz,r,g,b,gloss)}
-const voxel=.245,occ=new Set();
-function key(x,y,z){return x+','+y+','+z}
-function put(x,y,z){occ.add(key(x,y,z))}
-function box(x0,x1,y0,y1,z0,z1){for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++)for(let z=z0;z<=z1;z++)put(x,y,z)}
-function carve(x0,x1,y0,y1,z0,z1){for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++)for(let z=z0;z<=z1;z++)occ.delete(key(x,y,z))}
-box(-1,5,-2,1,-2,2);
-box(4,6,-1,1,-1,1);
-box(-5,-2,-1,1,-2,2);
-box(-7,-6,-1,0,-1,1);
-box(-4,-3,2,2,-1,1);
-box(-2,0,2,2,-1,1);
-box(1,3,2,2,-1,1);
-carve(5,6,1,1,1,1);
-carve(5,6,1,1,-1,-1);
-carve(-5,-5,1,1,2,2);
-carve(-5,-5,1,1,-2,-2);
-carve(-7,-7,0,0,-1,-1);
-carve(-7,-7,0,0,1,1);
-carve(0,2,-2,-2,-2,-2);carve(0,2,-2,-2,2,2);
-box(-3,-2,-4,-3,-2,-1);box(-3,-2,-4,-3,1,2);
-box(2,3,-4,-3,-2,-1);box(2,3,-4,-3,1,2);
-box(-3,-2,-2,-2,-2,-1);box(-3,-2,-2,-2,1,2);
-box(2,3,-2,-2,-2,-1);box(2,3,-2,-2,1,2);
-box(-4,-4,3,4,-2,-1);box(-4,-4,3,4,1,2);
-box(-3,-3,4,4,-2,-1);box(-3,-3,4,4,1,2);
-box(6,6,-1,0,0,0);
-function has(x,y,z){return occ.has(key(x,y,z))}
-function jitter(base,amt){return Math.max(0,Math.min(1,base+(rnd()-.5)*amt))}
+
+function add(x,y,z,sx,sy,sz,r,g,b,gloss=0){
+  inst.push(x,y,z,sx,sy,sz,r,g,b,gloss);
+}
+
+const voxel=.105;
+const occ=new Set();
+
+function key(x,y,z){
+  return x+','+y+','+z;
+}
+
+function put(x,y,z){
+  occ.add(key(x,y,z));
+}
+
+function ell(cx,cy,cz,rx,ry,rz){
+  for(let x=Math.floor(cx-rx);x<=Math.ceil(cx+rx);x++)
+  for(let y=Math.floor(cy-ry);y<=Math.ceil(cy+ry);y++)
+  for(let z=Math.floor(cz-rz);z<=Math.ceil(cz+rz);z++){
+    const dx=(x-cx)/rx,dy=(y-cy)/ry,dz=(z-cz)/rz;
+    if(dx*dx+dy*dy+dz*dz<=1)put(x,y,z);
+  }
+}
+
+function box(x0,x1,y0,y1,z0,z1){
+  for(let x=x0;x<=x1;x++)
+  for(let y=y0;y<=y1;y++)
+  for(let z=z0;z<=z1;z++)
+    put(x,y,z);
+}
+
+function cut(pred){
+  for(const id of [...occ]){
+    const [x,y,z]=id.split(',').map(Number);
+    if(pred(x,y,z))occ.delete(id);
+  }
+}
+
+ell(-1.5,0,0,13.8,8.9,7.2);
+ell(-7.0,0.8,0,8.2,8.1,6.8);
+ell(7.4,2.0,0,8.0,7.5,6.6);
+
+ell(13.2,4.0,0,6.8,6.4,5.9);
+ell(18.0,3.2,0,4.7,4.2,4.5);
+ell(20.3,2.7,0,2.7,2.7,3.4);
+
+ell(14.9,0.7,0,5.4,4.4,5.0);
+ell(18.1,0.7,0,3.8,3.0,4.0);
+
+box(-8,-4,-10,-5,-5,-2);
+box(-8,-4,-10,-5,2,5);
+box(6,10,-10,-5,-5,-2);
+box(6,10,-10,-5,2,5);
+
+ell(-6,-10,0,3.5,2.0,5.2);
+ell(8,-10,0,3.5,2.0,5.2);
+
+ell(10.3,10.1,-4.0,3.0,3.2,2.1);
+ell(10.3,10.1, 4.0,3.0,3.2,2.1);
+
+ell(12.1,9.8,-4.0,2.1,2.4,1.6);
+ell(12.1,9.8, 4.0,2.1,2.4,1.6);
+
+ell(-14.1,1.1,0,2.0,1.8,1.9);
+
+cut((x,y,z)=>y<-7 && x>-2 && x<4 && Math.abs(z)>3);
+cut((x,y,z)=>x>20 && y>5 && Math.abs(z)>2);
+cut((x,y,z)=>x>18 && y<-1 && Math.abs(z)>3);
+
+function has(x,y,z){
+  return occ.has(key(x,y,z));
+}
+
+function jitter(base,amt){
+  return Math.max(0,Math.min(1,base+(rnd()-.5)*amt));
+}
+
 function colorFor(x,y,z){
-if((x===-5||x===-6)&&y===1&&(z===-1||z===1))return[.03,.025,.024,.98];
-if(x===-6&&y===1&&(z===-2||z===2))return[.92,.86,.72,.92];
-if(x<=-7&&y<=0&&z===0)return[.05,.038,.034,.88];
-if((x===-4||x===-3)&&y>=3&&(z===-1||z===1))return[.60,.44,.34,.08];
-if(y<=-3)return[.30,.22,.15,.03];
-if(y<=-1&&x>-2&&x<4)return[.46,.34,.23,.03];
-if(x<=-2)return[jitter(.47,.06),jitter(.34,.05),jitter(.23,.04),.04];
-return[jitter(.40,.06),jitter(.29,.05),jitter(.19,.04),.035]
+  if(x>=15 && y<=4)
+    return [jitter(.69,.04),jitter(.55,.04),jitter(.40,.035),.05];
+
+  if(x>=8 && y<=1 && Math.abs(z)<=5)
+    return [jitter(.61,.04),jitter(.47,.035),jitter(.34,.03),.04];
+
+  if(y<=-6)
+    return [jitter(.27,.025),jitter(.19,.02),jitter(.14,.02),.04];
+
+  if(x>8)
+    return [jitter(.54,.055),jitter(.35,.045),jitter(.22,.035),.05];
+
+  if(x<-7)
+    return [jitter(.39,.055),jitter(.245,.04),jitter(.15,.03),.035];
+
+  return [jitter(.46,.06),jitter(.285,.045),jitter(.17,.035),.035];
 }
+
 for(const id of occ){
-const[x,y,z]=id.split(',').map(Number);
-const exposed=!has(x+1,y,z)||!has(x-1,y,z)||!has(x,y+1,z)||!has(x,y-1,z)||!has(x,y,z+1)||!has(x,y,z-1);
-if(!exposed)continue;
-const[r,g,b,gloss]=colorFor(x,y,z);
-const jx=(rnd()-.5)*.008,jy=(rnd()-.5)*.008,jz=(rnd()-.5)*.008;
-add(x*voxel+jx,y*voxel+jy,z*voxel+jz,voxel*.96,voxel*.96,voxel*.96,r,g,b,gloss)
+  const [x,y,z]=id.split(',').map(Number);
+
+  const exposed=
+    !has(x+1,y,z)||
+    !has(x-1,y,z)||
+    !has(x,y+1,z)||
+    !has(x,y-1,z)||
+    !has(x,y,z+1)||
+    !has(x,y,z-1);
+
+  if(!exposed)continue;
+
+  const [r,g,b,gloss]=colorFor(x,y,z);
+
+  const jx=(rnd()-.5)*.0025;
+  const jy=(rnd()-.5)*.0025;
+  const jz=(rnd()-.5)*.0025;
+
+  add(
+    x*voxel+jx,
+    y*voxel+jy,
+    z*voxel+jz,
+    voxel*.965,
+    voxel*.965,
+    voxel*.965,
+    r,g,b,
+    gloss
+  );
 }
+
+function feature(x,y,z,sx,sy,sz,r,g,b,gloss=.2){
+  add(x*voxel,y*voxel,z*voxel,sx*voxel,sy*voxel,sz*voxel,r,g,b,gloss);
+}
+
+for(const side of [-1,1]){
+  const z=side*5.72;
+
+  feature(15.1,5.4,z,2.2,2.2,.55,.018,.017,.016,.95);
+  feature(14.7,5.8,side*6.04,.62,.62,.32,.92,.94,.91,.95);
+
+  feature(10.8,10.2,side*5.00,2.15,2.25,.46,.105,.068,.052,.12);
+}
+
+feature(21.85,3.0,0,1.35,1.35,2.3,.035,.027,.025,.82);
+
+for(const side of [-1,1]){
+  const z=side*4.48;
+
+  feature(19.3,1.55,z,1.15,.35,.34,.055,.038,.032,.45);
+  feature(18.3,1.20,z,1.05,.33,.34,.055,.038,.032,.45);
+  feature(17.35,1.33,z,.85,.31,.34,.055,.038,.032,.45);
+  feature(16.65,1.80,z,.62,.30,.34,.055,.038,.032,.45);
+}
+
+for(const side of [-1,1]){
+  for(const [x,y] of [[19.7,2.1],[19.2,2.65],[18.7,2.2]]){
+    feature(x,y,side*4.55,.22,.22,.25,.12,.075,.055,.12);
+  }
+}
+
 const nInst=inst.length/10;
-const offsets=new Float32Array(nInst*3),scales=new Float32Array(nInst*3),colors=new Float32Array(nInst*3),glosses=new Float32Array(nInst);
-for(let i=0;i<nInst;i++){const k=i*10;offsets.set(inst.slice(k,k+3),i*3);scales.set(inst.slice(k+3,k+6),i*3);colors.set(inst.slice(k+6,k+9),i*3);glosses[i]=inst[k+9]}
-buf(2,offsets,3,1);buf(3,scales,3,1);buf(4,colors,3,1);buf(5,glosses,1,1);
-gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);gl.clearColor(0,0,0,0);
-const uProj=gl.getUniformLocation(prog,'uProj'),uView=gl.getUniformLocation(prog,'uView'),uModel=gl.getUniformLocation(prog,'uModel'),uGlobalScale=gl.getUniformLocation(prog,'uGlobalScale'),uCamera=gl.getUniformLocation(prog,'uCamera');
-function persp(fov,aspect,near,far){const f=1/Math.tan(fov/2),nf=1/(near-far);return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)*nf,-1,0,0,2*far*near*nf,0])}
-function mul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
-function ident(){return new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1])}
-function tr(x,y,z){const m=ident();m[12]=x;m[13]=y;m[14]=z;return m}
-function rx(a){const c=Math.cos(a),s=Math.sin(a);return new Float32Array([1,0,0,0,0,c,s,0,0,-s,c,0,0,0,0,1])}
-function ry(a){const c=Math.cos(a),s=Math.sin(a);return new Float32Array([c,0,-s,0,0,1,0,0,s,0,c,0,0,0,0,1])}
-let yaw=-.48,pitch=-.06,targetYaw=yaw,targetPitch=pitch,zoom=5.45,targetZoom=zoom;
-let velYaw=0,velPitch=0,moved=0,lastTap=0,lastMoveT=0,squish=0,squishTarget=0,auto=true,idleTimer=0,pinchStart=null;
-const pointers=new Map();
-function wake(){auto=false;clearTimeout(idleTimer);idleTimer=setTimeout(()=>auto=true,2500)}
-function pDist(){const a=[...pointers.values()];if(a.length<2)return 0;return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)}
-canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});wake();if(pointers.size===1){moved=0;velYaw=velPitch=0;lastMoveT=performance.now()}if(pointers.size===2)pinchStart={d:pDist(),z:targetZoom}});
-canvas.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;const old=pointers.get(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===2&&pinchStart){const d=pDist();if(d>8)targetZoom=Math.max(4.15,Math.min(7.1,pinchStart.z*pinchStart.d/d));return}if(pointers.size!==1)return;const now=performance.now(),dt=Math.max(8,now-lastMoveT),dx=e.clientX-old.x,dy=e.clientY-old.y;moved+=Math.abs(dx)+Math.abs(dy);targetYaw+=dx*.0084;targetPitch=Math.max(-.66,Math.min(.55,targetPitch+dy*.0064));velYaw=(dx*.0084)/(dt/16.67);velPitch=(dy*.0064)/(dt/16.67);lastMoveT=now});
-function finish(e){pointers.delete(e.pointerId);if(pointers.size>=2){pinchStart={d:pDist(),z:targetZoom};return}if(pointers.size===1){pinchStart=null;return}pinchStart=null;if(moved<9){const now=performance.now();squishTarget=1;setTimeout(()=>squishTarget=0,170);if(now-lastTap<320){targetYaw=-.48;targetPitch=-.06;targetZoom=5.45;velYaw=velPitch=0}lastTap=now}else{targetYaw+=velYaw*3.1;targetPitch=Math.max(-.66,Math.min(.55,targetPitch+velPitch*1.8))}wake()}
-canvas.addEventListener('pointerup',finish);canvas.addEventListener('pointercancel',finish);
-canvas.addEventListener('wheel',e=>{e.preventDefault();wake();targetZoom=Math.max(4.15,Math.min(7.1,targetZoom+e.deltaY*.0034))},{passive:false});
-function resize(){const r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2),w=Math.max(1,Math.floor(r.width*d)),h=Math.max(1,Math.floor(r.height*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h)}return w/h}
-let prev=performance.now();
-function frame(t){
-const aspect=resize(),dt=Math.min(.05,(t-prev)/1000||.016);prev=t;
-const reduced=matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-if(auto&&!reduced)targetYaw+=dt*.07;
-yaw+=(targetYaw-yaw)*.085;pitch+=(targetPitch-pitch)*.085;zoom+=(targetZoom-zoom)*.10;squish+=(squishTarget-squish)*.18;
-const mobile=innerWidth<820,scale=mobile?.91:1.02;
-const gx=scale*(1+.05*squish),gy=scale*(reduced?1:1+.008*Math.sin(t*.00155))*(1-.105*squish),gz=scale*(1+.045*squish);
-const px=mobile?.26:.72,py=(mobile?-.34:-.10)+(reduced?0:.016*Math.sin(t*.00125));
-const model=mul(tr(px,py,0),mul(ry(yaw),rx(pitch)));
-const view=tr(0,0,-zoom);
-const proj=persp(40*Math.PI/180,aspect,.1,100);
-gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-gl.useProgram(prog);gl.bindVertexArray(vao);
-gl.uniformMatrix4fv(uProj,false,proj);gl.uniformMatrix4fv(uView,false,view);gl.uniformMatrix4fv(uModel,false,model);gl.uniform3f(uGlobalScale,gx,gy,gz);gl.uniform3f(uCamera,0,0,zoom);
-gl.drawElementsInstanced(gl.TRIANGLES,I.length,gl.UNSIGNED_SHORT,0,nInst);
-requestAnimationFrame(frame)
+
+const offsets=new Float32Array(nInst*3);
+const scales=new Float32Array(nInst*3);
+const colors=new Float32Array(nInst*3);
+const glosses=new Float32Array(nInst);
+
+for(let i=0;i<nInst;i++){
+  const k=i*10;
+
+  offsets.set(inst.slice(k,k+3),i*3);
+  scales.set(inst.slice(k+3,k+6),i*3);
+  colors.set(inst.slice(k+6,k+9),i*3);
+  glosses[i]=inst[k+9];
 }
+
+buf(2,offsets,3,1);
+buf(3,scales,3,1);
+buf(4,colors,3,1);
+buf(5,glosses,1,1);
+
+gl.enable(gl.DEPTH_TEST);
+gl.enable(gl.CULL_FACE);
+gl.cullFace(gl.BACK);
+gl.clearColor(0,0,0,0);
+
+const uProj=gl.getUniformLocation(prog,'uProj');
+const uView=gl.getUniformLocation(prog,'uView');
+const uModel=gl.getUniformLocation(prog,'uModel');
+const uGlobalScale=gl.getUniformLocation(prog,'uGlobalScale');
+const uCamera=gl.getUniformLocation(prog,'uCamera');
+
+function persp(fov,aspect,near,far){
+  const f=1/Math.tan(fov/2);
+  const nf=1/(near-far);
+
+  return new Float32Array([
+    f/aspect,0,0,0,
+    0,f,0,0,
+    0,0,(far+near)*nf,-1,
+    0,0,2*far*near*nf,0
+  ]);
+}
+
+function mul(a,b){
+  const o=new Float32Array(16);
+
+  for(let c=0;c<4;c++)
+  for(let r=0;r<4;r++)
+    o[c*4+r]=
+      a[r]*b[c*4]+
+      a[4+r]*b[c*4+1]+
+      a[8+r]*b[c*4+2]+
+      a[12+r]*b[c*4+3];
+
+  return o;
+}
+
+function ident(){
+  return new Float32Array([
+    1,0,0,0,
+    0,1,0,0,
+    0,0,1,0,
+    0,0,0,1
+  ]);
+}
+
+function tr(x,y,z){
+  const m=ident();
+  m[12]=x;
+  m[13]=y;
+  m[14]=z;
+  return m;
+}
+
+function rx(a){
+  const c=Math.cos(a);
+  const s=Math.sin(a);
+
+  return new Float32Array([
+    1,0,0,0,
+    0,c,s,0,
+    0,-s,c,0,
+    0,0,0,1
+  ]);
+}
+
+function ry(a){
+  const c=Math.cos(a);
+  const s=Math.sin(a);
+
+  return new Float32Array([
+    c,0,-s,0,
+    0,1,0,0,
+    s,0,c,0,
+    0,0,0,1
+  ]);
+}
+
+let yaw=-.48;
+let pitch=-.06;
+let targetYaw=yaw;
+let targetPitch=pitch;
+
+let zoom=5.45;
+let targetZoom=zoom;
+
+let velYaw=0;
+let velPitch=0;
+
+let moved=0;
+let lastTap=0;
+let lastMoveT=0;
+
+let squish=0;
+let squishTarget=0;
+
+let auto=true;
+let idleTimer=0;
+let pinchStart=null;
+
+const pointers=new Map();
+
+function wake(){
+  auto=false;
+
+  clearTimeout(idleTimer);
+
+  idleTimer=setTimeout(
+    ()=>auto=true,
+    2500
+  );
+}
+
+function pDist(){
+  const a=[...pointers.values()];
+
+  if(a.length<2)
+    return 0;
+
+  return Math.hypot(
+    a[0].x-a[1].x,
+    a[0].y-a[1].y
+  );
+}
+
+canvas.addEventListener('pointerdown',e=>{
+  canvas.setPointerCapture(e.pointerId);
+
+  pointers.set(
+    e.pointerId,
+    {x:e.clientX,y:e.clientY}
+  );
+
+  wake();
+
+  if(pointers.size===1){
+    moved=0;
+    velYaw=velPitch=0;
+    lastMoveT=performance.now();
+  }
+
+  if(pointers.size===2)
+    pinchStart={
+      d:pDist(),
+      z:targetZoom
+    };
+});
+
+canvas.addEventListener('pointermove',e=>{
+  if(!pointers.has(e.pointerId))
+    return;
+
+  const old=pointers.get(e.pointerId);
+
+  pointers.set(
+    e.pointerId,
+    {x:e.clientX,y:e.clientY}
+  );
+
+  if(pointers.size===2&&pinchStart){
+    const d=pDist();
+
+    if(d>8)
+      targetZoom=Math.max(
+        4.15,
+        Math.min(
+          7.1,
+          pinchStart.z*pinchStart.d/d
+        )
+      );
+
+    return;
+  }
+
+  if(pointers.size!==1)
+    return;
+
+  const now=performance.now();
+  const dt=Math.max(8,now-lastMoveT);
+
+  const dx=e.clientX-old.x;
+  const dy=e.clientY-old.y;
+
+  moved+=Math.abs(dx)+Math.abs(dy);
+
+  targetYaw+=dx*.0084;
+
+  targetPitch=Math.max(
+    -.66,
+    Math.min(
+      .55,
+      targetPitch+dy*.0064
+    )
+  );
+
+  velYaw=(dx*.0084)/(dt/16.67);
+  velPitch=(dy*.0064)/(dt/16.67);
+
+  lastMoveT=now;
+});
+
+function finish(e){
+  pointers.delete(e.pointerId);
+
+  if(pointers.size>=2){
+    pinchStart={
+      d:pDist(),
+      z:targetZoom
+    };
+
+    return;
+  }
+
+  if(pointers.size===1){
+    pinchStart=null;
+    return;
+  }
+
+  pinchStart=null;
+
+  if(moved<9){
+    const now=performance.now();
+
+    squishTarget=1;
+
+    setTimeout(
+      ()=>squishTarget=0,
+      170
+    );
+
+    if(now-lastTap<320){
+      targetYaw=-.48;
+      targetPitch=-.06;
+      targetZoom=5.45;
+      velYaw=velPitch=0;
+    }
+
+    lastTap=now;
+  }else{
+    targetYaw+=velYaw*3.1;
+
+    targetPitch=Math.max(
+      -.66,
+      Math.min(
+        .55,
+        targetPitch+velPitch*1.8
+      )
+    );
+  }
+
+  wake();
+}
+
+canvas.addEventListener('pointerup',finish);
+canvas.addEventListener('pointercancel',finish);
+
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+
+  wake();
+
+  targetZoom=Math.max(
+    4.15,
+    Math.min(
+      7.1,
+      targetZoom+e.deltaY*.0034
+    )
+  );
+},{passive:false});
+
+function resize(){
+  const r=canvas.getBoundingClientRect();
+
+  const d=Math.min(
+    devicePixelRatio||1,
+    2
+  );
+
+  const w=Math.max(
+    1,
+    Math.floor(r.width*d)
+  );
+
+  const h=Math.max(
+    1,
+    Math.floor(r.height*d)
+  );
+
+  if(canvas.width!==w||canvas.height!==h){
+    canvas.width=w;
+    canvas.height=h;
+
+    gl.viewport(
+      0,
+      0,
+      w,
+      h
+    );
+  }
+
+  return w/h;
+}
+
+let prev=performance.now();
+
+function frame(t){
+  const aspect=resize();
+
+  const dt=Math.min(
+    .05,
+    (t-prev)/1000||.016
+  );
+
+  prev=t;
+
+  const reduced=
+    matchMedia &&
+    matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if(auto&&!reduced)
+    targetYaw+=dt*.07;
+
+  yaw+=(targetYaw-yaw)*.085;
+  pitch+=(targetPitch-pitch)*.085;
+  zoom+=(targetZoom-zoom)*.10;
+  squish+=(squishTarget-squish)*.18;
+
+  const mobile=innerWidth<820;
+
+  const scale=
+    mobile?
+    .84:
+    .94;
+
+  const gx=
+    scale*
+    (1+.05*squish);
+
+  const gy=
+    scale*
+    (
+      reduced?
+      1:
+      1+.008*Math.sin(t*.00155)
+    )*
+    (1-.105*squish);
+
+  const gz=
+    scale*
+    (1+.045*squish);
+
+  const px=
+    mobile?
+    .48:
+    1.02;
+
+  const py=
+    (
+      mobile?
+      .10:
+      .18
+    )
+    +
+    (
+      reduced?
+      0:
+      .016*Math.sin(t*.00125)
+    );
+
+  const model=
+    mul(
+      tr(px,py,0),
+      mul(
+        ry(yaw),
+        rx(pitch)
+      )
+    );
+
+  const view=
+    tr(
+      0,
+      0,
+      -zoom
+    );
+
+  const proj=
+    persp(
+      40*Math.PI/180,
+      aspect,
+      .1,
+      100
+    );
+
+  gl.clear(
+    gl.COLOR_BUFFER_BIT|
+    gl.DEPTH_BUFFER_BIT
+  );
+
+  gl.useProgram(prog);
+  gl.bindVertexArray(vao);
+
+  gl.uniformMatrix4fv(
+    uProj,
+    false,
+    proj
+  );
+
+  gl.uniformMatrix4fv(
+    uView,
+    false,
+    view
+  );
+
+  gl.uniformMatrix4fv(
+    uModel,
+    false,
+    model
+  );
+
+  gl.uniform3f(
+    uGlobalScale,
+    gx,
+    gy,
+    gz
+  );
+
+  gl.uniform3f(
+    uCamera,
+    0,
+    0,
+    zoom
+  );
+
+  gl.drawElementsInstanced(
+    gl.TRIANGLES,
+    I.length,
+    gl.UNSIGNED_SHORT,
+    0,
+    nInst
+  );
+
+  requestAnimationFrame(frame);
+}
+
 requestAnimationFrame(frame);
+
 })();
 </script>
 </body>
