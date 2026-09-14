@@ -277,14 +277,31 @@ function frame(t){
   const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(auto&&!reduced)targetYaw+=dt*.07;
   yaw+=(targetYaw-yaw)*.085;pitch+=(targetPitch-pitch)*.085;zoom+=(targetZoom-zoom)*.10;squish+=(squishTarget-squish)*.18;
-  const mobile=window.innerWidth<820,scale=mobile?.84:.94;
+
+  const mobile=window.innerWidth<820,scale=mobile?.80:.90;
+
   const gx=scale*(1+.05*squish),gy=scale*(reduced?1:1+.008*Math.sin(t*.00155))*(1-.105*squish),gz=scale*(1+.045*squish);
-  const px=mobile?.48:1.02,py=(mobile?.10:.18)+(reduced?0:.016*Math.sin(t*.00125));
+
+  const px=mobile?.48:1.02,py=(mobile?.20:.30)+(reduced?0:.016*Math.sin(t*.00125));
+
   const model=mul(tr(px,py,0),mul(ry(yaw),rx(pitch))),view=tr(0,0,-zoom),proj=persp(40*Math.PI/180,aspect,.1,100);
+
   gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(prog);
-  gl.uniformMatrix4fv(uProj,false,proj);gl.uniformMatrix4fv(uView,false,view);gl.uniformMatrix4fv(uModel,false,model);gl.uniform3f(uGlobalScale,gx,gy,gz);gl.uniform3f(uCamera,0,0,zoom);
+
+  gl.uniformMatrix4fv(uProj,false,proj);
+  gl.uniformMatrix4fv(uView,false,view);
+  gl.uniformMatrix4fv(uModel,false,model);
+  gl.uniform3f(uGlobalScale,gx,gy,gz);
+  gl.uniform3f(uCamera,0,0,zoom);
+
   gl.drawElements(gl.TRIANGLES,idx.length,gl.UNSIGNED_SHORT,0);
-  const ge=gl.getError();if(ge!==gl.NO_ERROR){fail('3D draw error: WebGL '+ge);return;}
+
+  const ge=gl.getError();
+  if(ge!==gl.NO_ERROR){
+    fail('3D draw error: WebGL '+ge);
+    return;
+  }
+
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
